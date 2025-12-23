@@ -4,7 +4,7 @@ setlocal enabledelayedexpansion
 REM 产品查询系统远程部署脚本 (Windows版本)
 REM 目标服务器: 42.194.226.146
 REM 用户: root
-REM 密码: Thanks12A#
+REM 密码: password
 
 echo ==========================================
 echo     产品查询系统远程部署脚本
@@ -14,7 +14,7 @@ echo.
 REM 配置参数
 set SERVER_IP=42.194.226.146
 set SERVER_USER=root
-set SERVER_PASS=Thanks12A#
+set SERVER_PASS=password
 set SERVER_PATH=/opt/chaxunorder
 set PROJECT_NAME=chaxunorder
 
