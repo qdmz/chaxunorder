@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}批量导入产品 - {{ config.SITE_NAME or '产品查询系统' }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="bi bi-upload"></i> 批量导入产品</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> 
+                    支持CSV格式文件导入，请按照模板格式准备数据文件。
+                </div>
+                
+                <form method="post" enctype="multipart/form-data" id="uploadForm">
+                    <div class="mb-4">
+                        <label for="file" class="form-label">选择文件 <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control" id="file" name="file" 
+                               accept=".csv,.xlsx,.xls" required>
+                        <div class="form-text">支持格式: CSV, Excel (.xlsx, .xls)，最大文件大小: 16MB</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5><i class="bi bi-download"></i> 下载模板</h5>
+                        <p class="text-muted">请先下载导入模板，按照模板格式填写产品信息：</p>
+                        <div class="d-grid gap-2 d-md-flex">
+                            <a href="#" class="btn btn-outline-primary" onclick="downloadCSVTemplate()">
+                                <i class="bi bi-file-earmark-text"></i> 下载CSV模板
+                            </a>
+                            <a href="#" class="btn btn-outline-success" onclick="downloadExcelTemplate()">
+                                <i class="bi bi-file-earmark-excel"></i> 下载Excel模板
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="card bg-light">
+                        <div class="card-header">
+                            <h6><i class="bi bi-grid"></i> 导入字段说明</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>字段名</th>
+                                            <th>是否必填</th>
+                                            <th>说明</th>
+                                            <th>示例</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>sku</td>
+                                            <td><span class="badge bg-danger">必填</span></td>
+                                            <td>产品货号，唯一标识</td>
+                                            <td>PRD001</td>
+                                        </tr>
+                                        <tr>
+                                            <td>name</td>
+                                            <td><span class="badge bg-danger">必填</span></td>
+                                            <td>产品名称</td>
+                                            <td>洗衣液</td>
+                                        </tr>
+                                        <tr>
+                                            <td>barcode</td>
+                                            <td><span class="badge bg-secondary">选填</span></td>
+                                            <td>产品条码</td>
+                                            <td>1234567890123</td>
+                                        </tr>
+                                        <tr>
+                                            <td>spec</td>
+                                            <td><span class="badge bg-secondary">选填</span></td>
+                                            <td>产品规格</td>
+                                            <td>2L/瓶</td>
+                                        </tr>
+                                        <tr>
+                                            <td>model</td>
+                                            <td><span class="badge bg-secondary">选填</span></td>
+                                            <td>产品型号</td>
+                                            <td>LX-2000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>retail_price</td>
+                                            <td><span class="badge bg-warning">选填</span></td>
+                                            <td>零售价格</td>
+                                            <td>25.50</td>
+                                        </tr>
+                                        <tr>
+                                            <td>wholesale_price</td>
+                                            <td><span class="badge bg-warning">选填</span></td>
+                                            <td>批发价格</td>
+                                            <td>20.00</td>
+                                        </tr>
+                                        <tr>
+                                            <td>stock_quantity</td>
+                                            <td><span class="badge bg-secondary">选填</span></td>
+                                            <td>库存数量</td>
+                                            <td>100</td>
+                                        </tr>
+                                        <tr>
+                                            <td>description</td>
+                                            <td><span class="badge bg-secondary">选填</span></td>
+                                            <td>产品描述</td>
+                                            <td>强力去污洗衣液</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <h6><i class="bi bi-exclamation-triangle"></i> 注意事项</h6>
+                        <ul class="mb-0">
+                            <li>SKU为必填字段，且不能重复</li>
+                            <li>价格请使用数字格式，如：25.50</li>
+                            <li>库存请使用整数格式</li>
+                            <li>文件编码请使用UTF-8格式</li>
+                            <li>导入时会跳过已存在的SKU，不会覆盖现有数据</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('search') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> 返回
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="bi bi-upload"></i> 开始导入
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 导入结果模态框 -->
+<div class="modal fade" id="resultModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">导入结果</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="resultContent">
+                <!-- 结果内容将在这里显示 -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" onclick="location.reload()">刷新页面</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 下载CSV模板
+    function downloadCSVTemplate() {
+        const csvContent = "sku,name,barcode,spec,model,retail_price,wholesale_price,stock_quantity,description\nPRD001,洗衣液,1234567890123,2L/瓶,LX-2000,25.50,20.00,100,强力去污洗衣液\nPRD002,洗洁精,2345678901234,500ml,XJ-001,12.00,9.50,200,食品级洗洁精";
+        
+        const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "产品导入模板.csv");
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showToast('CSV模板下载成功', 'success');
+    }
+    
+    // 下载Excel模板（简化版）
+    function downloadExcelTemplate() {
+        showToast('Excel模板功能开发中，请使用CSV模板', 'info');
+    }
+    
+    // 表单提交处理
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const fileInput = document.getElementById('file');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            showToast('请选择要导入的文件', 'danger');
+            return;
+        }
+        
+        // 文件大小检查
+        if (file.size > 16 * 1024 * 1024) {
+            showToast('文件大小超过16MB限制', 'danger');
+            return;
+        }
+        
+        // 文件格式检查
+        const allowedTypes = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        
+        if (!['csv', 'xlsx', 'xls'].includes(fileExtension)) {
+            showToast('不支持的文件格式，请使用CSV或Excel文件', 'danger');
+            return;
+        }
+        
+        // 显示上传进度
+        const submitBtn = document.getElementById('submitBtn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>导入中...';
+        submitBtn.disabled = true;
+        
+        // 创建FormData
+        const formData = new FormData(this);
+        
+        // 发送请求
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.text();
+            }
+            throw new Error('导入失败');
+        })
+        .then(html => {
+            // 解析响应HTML
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // 检查是否有成功消息
+            const alerts = doc.querySelectorAll('.alert-success');
+            if (alerts.length > 0) {
+                showImportResult('success', '导入成功', alerts[0].textContent);
+            } else {
+                const errorAlerts = doc.querySelectorAll('.alert-danger');
+                if (errorAlerts.length > 0) {
+                    showImportResult('error', '导入失败', errorAlerts[0].textContent);
+                } else {
+                    showImportResult('success', '导入成功', '产品数据已成功导入');
+                }
+            }
+        })
+        .catch(error => {
+            showImportResult('error', '导入失败', error.message);
+        })
+        .finally(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        });
+    });
+    
+    // 显示导入结果
+    function showImportResult(type, title, message) {
+        const resultContent = document.getElementById('resultContent');
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const icon = type === 'success' ? 'check-circle' : 'exclamation-triangle';
+        
+        resultContent.innerHTML = `
+            <div class="alert ${alertClass}">
+                <i class="bi bi-${icon}"></i> ${message}
+            </div>
+            <div class="text-center">
+                <button type="button" class="btn btn-success" onclick="location.href='{{ url_for('search') }}'">
+                    <i class="bi bi-search"></i> 去查看产品
+                </button>
+            </div>
+        `;
+        
+        const modal = new bootstrap.Modal(document.getElementById('resultModal'));
+        modal.show();
+    }
+    
+    // 文件选择变化时的处理
+    document.getElementById('file').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const fileSize = (file.size / 1024 / 1024).toFixed(2);
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            
+            if (!['csv', 'xlsx', 'xls'].includes(fileExtension)) {
+                showToast('不支持的文件格式', 'warning');
+                e.target.value = '';
+                return;
+            }
+            
+            if (fileSize > 16) {
+                showToast(`文件大小 ${fileSize}MB 超过16MB限制`, 'warning');
+                e.target.value = '';
+                return;
+            }
+            
+            showToast(`已选择文件: ${file.name} (${fileSize}MB)`, 'info');
+        }
+    });
+</script>
+{% endblock %}

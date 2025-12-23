@@ -1,21 +1,233 @@
-<!doctype html>
-<html lang="zh-cn">
-  <head>
-    <meta charset="utf-8" />
-    <title>{{ p.name }}</title>
-  </head>
-  <body>
-    <h1>{{ p.name }}</h1>
-    <p>货号: {{ p.sku }}</p>
-    <p>条码: {{ p.barcode }}</p>
-    <p>规格: {{ p.spec }}</p>
-    <p>型号: {{ p.model }}</p>
-    <p>零售: {{ p.retail_price }}</p>
-    <p>批发: {{ p.wholesale_price }}</p>
-    {% if p.image_filename %}
-      <p><img src="/static/uploads/{{ p.image_filename }}" alt="{{ p.name }}" style="max-width:300px;"/></p>
-    {% endif %}
-    <p><a href="/order/{{ p.id }}">下单</a></p>
-    <p><a href="/search">返回查询</a></p>
-  </body>
-  </html>
+{% extends "base.html" %}
+
+{% block title %}{{ p.name }} - {{ config.SITE_NAME or '产品查询系统' }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('search') }}">产品查询</a></li>
+                <li class="breadcrumb-item active">{{ p.name }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                {% if p.image_filename %}
+                <img src="{{ url_for('uploaded_file', filename=p.image_filename) }}" 
+                     class="img-fluid rounded" 
+                     alt="{{ p.name }}"
+                     id="mainImage"
+                     style="max-height: 400px; width: 100%; object-fit: cover;">
+                {% else %}
+                <div class="text-center py-5 bg-light rounded">
+                    <i class="bi bi-image" style="font-size: 4rem; color: #6c757d;"></i>
+                    <p class="mt-2 text-muted">暂无产品图片</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title">{{ p.name }}</h2>
+                
+                <div class="row mt-4">
+                    <div class="col-6">
+                        <p class="mb-2">
+                            <strong>货号:</strong>
+                            <span class="badge bg-primary">{{ p.sku }}</span>
+                            <button class="btn btn-sm btn-outline-secondary ms-1" onclick="copyToClipboard('{{ p.sku }}')" title="复制货号">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </p>
+                    </div>
+                    {% if p.barcode %}
+                    <div class="col-6">
+                        <p class="mb-2">
+                            <strong>条码:</strong>
+                            <span class="badge bg-info">{{ p.barcode }}</span>
+                            <button class="btn btn-sm btn-outline-secondary ms-1" onclick="copyToClipboard('{{ p.barcode }}')" title="复制条码">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if p.spec %}
+                <div class="mb-3">
+                    <strong>规格:</strong> {{ p.spec }}
+                </div>
+                {% endif %}
+                
+                {% if p.model %}
+                <div class="mb-3">
+                    <strong>型号:</strong> {{ p.model }}
+                </div>
+                {% endif %}
+                
+                {% if p.category %}
+                <div class="mb-3">
+                    <strong>分类:</strong> <span class="badge bg-secondary">{{ p.category.name }}</span>
+                </div>
+                {% endif %}
+                
+                {% if p.stock_quantity is defined %}
+                <div class="mb-3">
+                    <strong>库存状态:</strong>
+                    {% if p.stock_quantity > 20 %}
+                    <span class="badge bg-success">库存充足 ({{ p.stock_quantity }}件)</span>
+                    {% elif p.stock_quantity > 10 %}
+                    <span class="badge bg-warning">库存较少 ({{ p.stock_quantity }}件)</span>
+                    {% elif p.stock_quantity > 0 %}
+                    <span class="badge bg-danger">库存紧张 ({{ p.stock_quantity }}件)</span>
+                    {% else %}
+                    <span class="badge bg-secondary">暂无库存</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <hr>
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body">
+                                <h5>零售价格</h5>
+                                <h3>¥{{ "%.2f"|format(p.retail_price or 0) }}</h3>
+                                <small>单件购买</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h5>批发价格</h5>
+                                <h3>¥{{ "%.2f"|format(p.wholesale_price or 0) }}</h3>
+                                <small>10件起批</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if p.description %}
+                <hr>
+                <div class="mt-4">
+                    <h5>产品描述</h5>
+                    <div class="text-muted">{{ p.description|nl2br }}</div>
+                </div>
+                {% endif %}
+                
+                <hr>
+                
+                <div class="d-grid gap-2 mt-4">
+                    <a href="{{ url_for('order', product_id=p.id) }}" class="btn btn-success btn-lg">
+                        <i class="bi bi-cart-plus"></i> 立即订购
+                    </a>
+                    <a href="{{ url_for('search') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> 返回搜索
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if p.image_filename %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-zoom-in"></i> 图片预览</h5>
+            </div>
+            <div class="card-body text-center">
+                <img src="{{ url_for('uploaded_file', filename=p.image_filename) }}" 
+                     class="img-fluid" 
+                     alt="{{ p.name }}"
+                     style="max-width: 100%; height: auto;">
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-info-circle"></i> 购买须知</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6><i class="bi bi-truck"></i> 配送说明</h6>
+                        <p class="text-muted">支持全国配送，一般1-3个工作日发货。批量采购可享受优惠。</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="bi bi-shield-check"></i> 品质保证</h6>
+                        <p class="text-muted">所有产品均为正品，提供质量保证和售后服务。</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="bi bi-telephone"></i> 联系我们</h6>
+                        <p class="text-muted">如有疑问，欢迎致电咨询或在线客服。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 图片预览功能
+    $('#mainImage').on('click', function() {
+        const imageUrl = $(this).attr('src');
+        const modalHtml = `
+            <div class="modal fade" id="imageModal" tabindex="-1">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">{{ p.name }} - 图片预览</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <img src="${imageUrl}" class="img-fluid" alt="{{ p.name }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('body').append(modalHtml);
+        const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+        modal.show();
+        
+        $('#imageModal').on('hidden.bs.modal', function() {
+            $(this).remove();
+        });
+    });
+    
+    // 分享功能
+    function shareProduct() {
+        if (navigator.share) {
+            navigator.share({
+                title: '{{ p.name }}',
+                text: '我发现了一个不错的产品: {{ p.name }} - 货号: {{ p.sku }}',
+                url: window.location.href
+            });
+        } else {
+            copyToClipboard(window.location.href);
+            showToast('链接已复制到剪贴板');
+        }
+    }
+</script>
+{% endblock %}

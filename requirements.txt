@@ -1,7 +1,24 @@
-flask>=2.2
-flask_sqlalchemy>=3.0
+flask>=2.3.0
+flask_sqlalchemy>=3.0.0
 flask_admin>=1.6.0
-flask_wtf>=1.1
-wtforms>=3.0
-python-dotenv>=1.0
-requests>=2.31
+flask_wtf>=1.1.0
+wtforms>=3.0.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+Pillow>=10.0.0
+Werkzeug>=2.3.0
+click>=8.1.0
+Jinja2>=3.1.0
+itsdangerous>=2.1.0
+MarkupSafe>=2.1.0
+SQLAlchemy>=2.0.0
+email-validator>=2.0.0
+# 可选依赖 - 短信服务
+aliyun-python-sdk-core>=2.13.36
+# 可选依赖 - 条码生成
+python-barcode>=0.15.0
+# 可选依赖 - Excel处理
+openpyxl>=3.1.0
+pandas>=2.0.0
+# 可选依赖 - 图片处理
+opencv-python>=4.8.0

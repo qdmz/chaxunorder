@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}订单成功 - {{ config.SITE_NAME or '产品查询系统' }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white text-center">
+                <h4><i class="bi bi-check-circle"></i> 订单提交成功！</h4>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                    <h2 class="mt-3">感谢您的订购</h2>
+                    <p class="text-muted">您的订单已成功提交，我们将尽快处理</p>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> 
+                    <strong>订单信息已发送</strong> - 我们的销售团队已收到订单通知，将在1个工作日内与您联系确认订单详情。
+                </div>
+                
+                <div class="card bg-light">
+                    <div class="card-header">
+                        <h5><i class="bi bi-receipt"></i> 订单详情</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <p><strong>订单编号:</strong> #{{ order.id }}</p>
+                                <p><strong>产品名称:</strong> {{ product.name }}</p>
+                                <p><strong>货号:</strong> {{ product.sku }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>订购数量:</strong> {{ order.quantity }} 件</p>
+                                <p><strong>总金额:</strong> <span class="text-danger">¥{{ "%.2f"|format(order.total_amount) }}</span></p>
+                                <p><strong>下单时间:</strong> {{ order.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>客户姓名:</strong> {{ order.customer_name }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>联系电话:</strong> {{ order.customer_phone }}</p>
+                            </div>
+                        </div>
+                        
+                        {% if order.notes %}
+                        <div class="mt-3">
+                            <p><strong>备注信息:</strong> {{ order.notes }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <i class="bi bi-telephone text-primary" style="font-size: 2rem;"></i>
+                                <h6 class="mt-2">电话咨询</h6>
+                                <p class="text-muted small">工作时间 9:00-18:00</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <i class="bi bi-chat-dots text-success" style="font-size: 2rem;"></i>
+                                <h6 class="mt-2">在线客服</h6>
+                                <p class="text-muted small">7x24小时服务</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <i class="bi bi-envelope text-info" style="font-size: 2rem;"></i>
+                                <h6 class="mt-2">邮件联系</h6>
+                                <p class="text-muted small">24小时内回复</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 mt-4">
+                    <button class="btn btn-success" onclick="window.print()">
+                        <i class="bi bi-printer"></i> 打印订单
+                    </button>
+                    <a href="{{ url_for('search') }}" class="btn btn-primary">
+                        <i class="bi bi-search"></i> 继续浏览产品
+                    </a>
+                    <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-box"></i> 再次查看此产品
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-truck"></i> 配送说明</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <i class="bi bi-1-circle-fill text-primary" style="font-size: 2rem;"></i>
+                        <h6 class="mt-2">订单确认</h6>
+                        <p class="text-muted small">1个工作日内联系确认</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <i class="bi bi-2-circle-fill text-primary" style="font-size: 2rem;"></i>
+                        <h6 class="mt-2">备货</h6>
+                        <p class="text-muted small">确认后1-2天准备</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <i class="bi bi-3-circle-fill text-primary" style="font-size: 2rem;"></i>
+                        <h6 class="mt-2">发货</h6>
+                        <p class="text-muted small">1-3天送达</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <i class="bi bi-4-circle-fill text-primary" style="font-size: 2rem;"></i>
+                        <h6 class="mt-2">收货</h6>
+                        <p class="text-muted small">签收确认</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 自动打印功能（可选）
+    function autoPrint() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('print') === 'true') {
+            setTimeout(() => {
+                window.print();
+            }, 1000);
+        }
+    }
+    
+    // 页面加载完成后执行
+    document.addEventListener('DOMContentLoaded', function() {
+        autoPrint();
+        
+        // 添加成功动画
+        const successIcon = document.querySelector('.bi-check-circle-fill');
+        successIcon.style.animation = 'pulse 1s infinite';
+    });
+    
+    // 复制订单号
+    function copyOrderNumber() {
+        copyToClipboard('#{{ order.id }}');
+        showToast('订单号已复制到剪贴板');
+    }
+    
+    // 添加CSS动画
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @media print {
+            .btn, nav, .footer {
+                display: none !important;
+            }
+            
+            .card {
+                border: 1px solid #000 !important;
+                box-shadow: none !important;
+                page-break-inside: avoid;
+            }
+            
+            .bi-check-circle-fill {
+                color: #198754 !important;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+{% endblock %}

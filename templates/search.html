@@ -1,31 +1,217 @@
-<!doctype html>
-<html lang="zh-cn">
-  <head>
-    <meta charset="utf-8">
-    <title>产品查询</title>
-  </head>
-  <body>
-    <h1>产品查询</h1>
-    <form method="post">
-      名称关键词: <input type="text" name="q" value="{{ q }}" />
-      货号: <input type="text" name="sku" />
-      条码: <input type="text" name="barcode" />
-      <button type="submit">查询</button>
-    </form>
-    <hr/>
-    {% if products %}
-      <ul>
-        {% for p in products %}
-          <li>
-            <a href="/product/{{ p.id }}">{{ p.name }}</a>
-            - 货号: {{ p.sku }}
-            - 零售: {{ p.retail_price }}
-            - 批发: {{ p.wholesale_price }}
-          </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p>暂无结果</p>
-    {% endif %}
-  </body>
-  </html>
+{% extends "base.html" %}
+
+{% block title %}产品查询 - {{ config.SITE_NAME or '产品查询系统' }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="search-form">
+            <h2 class="text-center mb-4">
+                <i class="bi bi-search"></i> 产品查询
+            </h2>
+            
+            <form method="post" action="{{ url_for('search') }}">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="q" class="form-label">产品名称</label>
+                        <input type="text" class="form-control" id="q" name="q" value="{{ q }}" placeholder="输入产品名称关键词">
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label for="sku" class="form-label">货号</label>
+                        <input type="text" class="form-control" id="sku" name="sku" value="{{ sku }}" placeholder="输入产品货号">
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label for="barcode" class="form-label">条码</label>
+                        <input type="text" class="form-control" id="barcode" name="barcode" value="{{ barcode }}" placeholder="输入产品条码">
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label for="category" class="form-label">分类</label>
+                        <select class="form-select" id="category" name="category">
+                            <option value="">全部分类</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if category == cat.id|string %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-12 text-center">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-search"></i> 查询产品
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-lg ms-2" onclick="clearForm()">
+                            <i class="bi bi-arrow-clockwise"></i> 清空
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="loading">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">加载中...</span>
+    </div>
+    <p class="mt-2">正在查询产品...</p>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        {% if products %}
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>
+                    <i class="bi bi-box"></i> 查询结果 ({{ products|length }} 个产品)
+                </h4>
+                <div>
+                    <button class="btn btn-outline-primary" onclick="printResults()">
+                        <i class="bi bi-printer"></i> 打印
+                    </button>
+                    <button class="btn btn-outline-success" onclick="exportResults()">
+                        <i class="bi bi-download"></i> 导出
+                    </button>
+                </div>
+            </div>
+            
+            <div class="row" id="productList">
+                {% for product in products %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card product-card h-100">
+                        {% if product.image_filename %}
+                        <img src="{{ url_for('uploaded_file', filename=product.image_filename) }}" 
+                             class="card-img-top product-image" 
+                             alt="{{ product.name }}"
+                             onerror="this.src='https://via.placeholder.com/300x200?text=暂无图片'">
+                        {% else %}
+                        <img src="https://via.placeholder.com/300x200?text=暂无图片" 
+                             class="card-img-top product-image" 
+                             alt="{{ product.name }}">
+                        {% endif %}
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ product.name }}</h5>
+                            
+                            <div class="mb-2">
+                                <small class="text-muted">货号:</small>
+                                <span class="badge bg-secondary">{{ product.sku }}</span>
+                                {% if product.barcode %}
+                                <small class="text-muted ms-2">条码:</small>
+                                <span class="badge bg-info">{{ product.barcode }}</span>
+                                {% endif %}
+                            </div>
+                            
+                            {% if product.spec %}
+                            <div class="mb-2">
+                                <small class="text-muted">规格:</small>
+                                <span>{{ product.spec }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            {% if product.model %}
+                            <div class="mb-2">
+                                <small class="text-muted">型号:</small>
+                                <span>{{ product.model }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="mb-2">
+                                <span class="price-badge badge bg-danger">零售: ¥{{ "%.2f"|format(product.retail_price or 0) }}</span>
+                                <span class="price-badge badge bg-success ms-1">批发: ¥{{ "%.2f"|format(product.wholesale_price or 0) }}</span>
+                            </div>
+                            
+                            {% if product.stock_quantity is defined and product.stock_quantity <= 10 %}
+                            <div class="mb-2">
+                                <span class="badge bg-warning">库存仅剩 {{ product.stock_quantity }} 件</span>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="mt-auto">
+                                <div class="btn-group w-100" role="group">
+                                    <a href="{{ url_for('product_detail', product_id=product.id) }}" 
+                                       class="btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i> 查看详情
+                                    </a>
+                                    <a href="{{ url_for('order', product_id=product.id) }}" 
+                                       class="btn btn-success">
+                                        <i class="bi bi-cart-plus"></i> 立即订购
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            {% if q or sku or barcode or category %}
+            <div class="text-center py-5">
+                <i class="bi bi-search" style="font-size: 3rem; color: #6c757d;"></i>
+                <h4 class="mt-3">未找到匹配的产品</h4>
+                <p class="text-muted">请尝试使用不同的关键词重新搜索</p>
+                <button type="button" class="btn btn-primary" onclick="history.back()">
+                    <i class="bi bi-arrow-left"></i> 返回修改搜索条件
+                </button>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-box-seam" style="font-size: 4rem; color: #6c757d;"></i>
+                <h3 class="mt-3">欢迎使用产品查询系统</h3>
+                <p class="text-muted">请在上方输入查询条件开始搜索产品</p>
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function clearForm() {
+        $('input[type="text"]').val('');
+        $('select').prop('selectedIndex', 0);
+        $('input[name="q"]').focus();
+    }
+    
+    function printResults() {
+        window.print();
+    }
+    
+    function exportResults() {
+        // 导出功能待实现
+        showToast('导出功能开发中', 'info');
+    }
+    
+    // 表单提交时显示加载状态
+    $('form').on('submit', function() {
+        if ($('#q').val() || $('#sku').val() || $('#barcode').val() || $('#category').val()) {
+            $('.loading').show();
+            $('.search-form').hide();
+        }
+    });
+    
+    // 回车搜索
+    $('input').on('keypress', function(e) {
+        if (e.which === 13) {
+            $('form').submit();
+        }
+    });
+</script>
+
+<style>
+    @media print {
+        .search-form, .btn-group, .footer, nav {
+            display: none !important;
+        }
+        
+        .product-card {
+            break-inside: avoid;
+            box-shadow: none !important;
+            border: 1px solid #000 !important;
+        }
+    }
+</style>
+{% endblock %}

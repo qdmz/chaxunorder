@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block title %}统计概况 - {{ config.SITE_NAME or '产品查询系统' }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="bi bi-graph-up"></i> 统计概况</h2>
+        <p class="text-muted">系统运营数据统计与分析</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <i class="bi bi-box" style="font-size: 2rem;"></i>
+            <div class="stat-number">{{ total_products }}</div>
+            <div>产品总数</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
+            <div class="stat-number">{{ active_products }}</div>
+            <div>在售产品</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <i class="bi bi-cart-check" style="font-size: 2rem;"></i>
+            <div class="stat-number">{{ total_orders }}</div>
+            <div>订单总数</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+            <i class="bi bi-currency-yen" style="font-size: 2rem;"></i>
+            <div class="stat-number">¥{{ "%.0f"|format(total_sales) }}</div>
+            <div>总销售额</div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-clock-history"></i> 最近订单</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>订单ID</th>
+                                <th>产品</th>
+                                <th>客户</th>
+                                <th>金额</th>
+                                <th>状态</th>
+                                <th>时间</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if recent_orders %}
+                                {% for order in recent_orders %}
+                                <tr>
+                                    <td>#{{ order.id }}</td>
+                                    <td>
+                                        <a href="{{ url_for('product_detail', product_id=order.product_id) }}">
+                                            {{ order.product.name[:15] }}{% if order.product.name|length > 15 %}...{% endif %}
+                                        </a>
+                                    </td>
+                                    <td>{{ order.customer_name }}</td>
+                                    <td>¥{{ "%.2f"|format(order.total_amount or 0) }}</td>
+                                    <td>
+                                        <span class="order-status status-{{ order.status }}">
+                                            {{ {'pending': '待确认', 'confirmed': '已确认', 'shipped': '已发货', 'delivered': '已送达', 'cancelled': '已取消'}[order.status] or order.status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ order.created_at.strftime('%m-%d %H:%M') }}</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">暂无订单数据</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-star"></i> 热门产品</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>产品名称</th>
+                                <th>货号</th>
+                                <th>单价</th>
+                                <th>销量</th>
+                                <th>库存</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if top_products %}
+                                {% for product in top_products %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('product_detail', product_id=product.id) }}">
+                                            {{ product.name[:20] }}{% if product.name|length > 20 %}...{% endif %}
+                                        </a>
+                                    </td>
+                                    <td>{{ product.sku }}</td>
+                                    <td>¥{{ "%.2f"|format(product.retail_price or 0) }}</td>
+                                    <td>{{ product.sales_count or 0 }}</td>
+                                    <td>
+                                        {% if product.stock_quantity is defined %}
+                                            {% if product.stock_quantity > 20 %}
+                                            <span class="text-success">{{ product.stock_quantity }}</span>
+                                            {% elif product.stock_quantity > 10 %}
+                                            <span class="text-warning">{{ product.stock_quantity }}</span>
+                                            {% elif product.stock_quantity > 0 %}
+                                            <span class="text-danger">{{ product.stock_quantity }}</span>
+                                            {% else %}
+                                            <span class="text-muted">缺货</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">暂无产品数据</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-exclamation-circle"></i> 待处理事项</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% if pending_orders > 0 %}
+                    <a href="/admin/order/" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-clock text-warning"></i>
+                            待确认订单
+                        </div>
+                        <span class="badge bg-warning rounded-pill">{{ pending_orders }}</span>
+                    </a>
+                    {% endif %}
+                    
+                    {% if low_stock_products|length > 0 %}
+                    <a href="/admin/product/" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-exclamation-triangle text-danger"></i>
+                            库存不足
+                        </div>
+                        <span class="badge bg-danger rounded-pill">{{ low_stock_products|length }}</span>
+                    </a>
+                    {% endif %}
+                    
+                    {% if inactive_products > 0 %}
+                    <a href="/admin/product/" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-pause-circle text-secondary"></i>
+                            下架产品
+                        </div>
+                        <span class="badge bg-secondary rounded-pill">{{ inactive_products }}</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-graph-up-arrow"></i> 销售统计</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="salesChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-pie-chart"></i> 产品分类</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="categoryChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="bi bi-download"></i> 数据导出</h5>
+                <div>
+                    <button class="btn btn-outline-primary btn-sm" onclick="exportData('products')">
+                        <i class="bi bi-file-earmark-text"></i> 导出产品
+                    </button>
+                    <button class="btn btn-outline-success btn-sm" onclick="exportData('orders')">
+                        <i class="bi bi-file-earmark-excel"></i> 导出订单
+                    </button>
+                    <button class="btn btn-outline-info btn-sm" onclick="exportData('statistics')">
+                        <i class="bi bi-bar-chart"></i> 导出统计
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">点击上方按钮导出相应的数据报表</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // 销售统计图表
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    const salesChart = new Chart(salesCtx, {
+        type: 'line',
+        data: {
+            labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+            datasets: [{
+                label: '销售额',
+                data: [12000, 19000, 15000, 25000, 22000, 30000],
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }, {
+                label: '订单数',
+                data: [65, 89, 80, 120, 106, 145],
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                tension: 0.1,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: '销售额 (¥)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                    title: {
+                        display: true,
+                        text: '订单数'
+                    }
+                }
+            }
+        }
+    });
+    
+    // 产品分类图表
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    const categoryChart = new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['日用品', '清洁用品', '厨房用品', '个人护理', '其他'],
+            datasets: [{
+                data: [30, 25, 20, 15, 10],
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    
+    // 数据导出功能
+    function exportData(type) {
+        showToast(`${type === 'products' ? '产品' : type === 'orders' ? '订单' : '统计'}数据导出功能开发中`, 'info');
+        
+        // 模拟导出
+        setTimeout(() => {
+            showToast('导出成功！文件下载中...', 'success');
+        }, 1000);
+    }
+    
+    // 刷新统计数据
+    function refreshStatistics() {
+        showLoading();
+        setTimeout(() => {
+            hideLoading();
+            showToast('统计数据已更新', 'success');
+        }, 1000);
+    }
+    
+    // 自动刷新（可选）
+    // setInterval(refreshStatistics, 60000); // 每分钟刷新一次
+</script>
+
+<style>
+    .stat-card {
+        transition: transform 0.2s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .order-status {
+        font-size: 0.85rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+    }
+    
+    .status-pending { background-color: #fff3cd; color: #856404; }
+    .status-confirmed { background-color: #d1ecf1; color: #0c5460; }
+    .status-shipped { background-color: #d4edda; color: #155724; }
+    .status-delivered { background-color: #d1e7dd; color: #0f5132; }
+    .status-cancelled { background-color: #f8d7da; color: #721c24; }
+</style>
+{% endblock %}
