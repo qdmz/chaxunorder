@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-cn">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ p.name }}</title>
+  </head>
+  <body>
+    <h1>{{ p.name }}</h1>
+    <p>货号: {{ p.sku }}</p>
+    <p>条码: {{ p.barcode }}</p>
+    <p>规格: {{ p.spec }}</p>
+    <p>型号: {{ p.model }}</p>
+    <p>零售: {{ p.retail_price }}</p>
+    <p>批发: {{ p.wholesale_price }}</p>
+    {% if p.image_filename %}
+      <p><img src="/static/uploads/{{ p.image_filename }}" alt="{{ p.name }}" style="max-width:300px;"/></p>
+    {% endif %}
+    <p><a href="/order/{{ p.id }}">下单</a></p>
+    <p><a href="/search">返回查询</a></p>
+  </body>
+  </html>

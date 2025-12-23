@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-cn">
+  <head><meta charset="utf-8"><title>下单</title></head>
+  <body>
+    <h1>为: {{ product.name }} 下单</h1>
+    {% if order %}
+      <p>已生成订单 ID: {{ order.id }}</p>
+      <p>数量: {{ order.quantity }}</p>
+      <p>我们已通知销售人员。</p>
+      <p><a href="/search">返回查询</a></p>
+    {% else %}
+      <form method="post">
+        数量: <input type="number" name="quantity" value="1" required /><br/>
+        姓名: <input type="text" name="customer_name" /><br/>
+        电话: <input type="text" name="customer_phone" /><br/>
+        <button type="submit">提交订单</button>
+      </form>
+    {% endif %}
+  </body>
+  </html>

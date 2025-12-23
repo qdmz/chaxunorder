@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-cn">
+  <head>
+    <meta charset="utf-8">
+    <title>产品查询</title>
+  </head>
+  <body>
+    <h1>产品查询</h1>
+    <form method="post">
+      名称关键词: <input type="text" name="q" value="{{ q }}" />
+      货号: <input type="text" name="sku" />
+      条码: <input type="text" name="barcode" />
+      <button type="submit">查询</button>
+    </form>
+    <hr/>
+    {% if products %}
+      <ul>
+        {% for p in products %}
+          <li>
+            <a href="/product/{{ p.id }}">{{ p.name }}</a>
+            - 货号: {{ p.sku }}
+            - 零售: {{ p.retail_price }}
+            - 批发: {{ p.wholesale_price }}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>暂无结果</p>
+    {% endif %}
+  </body>
+  </html>
