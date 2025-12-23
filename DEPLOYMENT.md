@@ -3,7 +3,7 @@
 ## 服务器信息
 - **IP地址**: 42.194.226.146
 - **用户名**: root  
-- **密码**: Thanks12A#
+- **密码**: password
 - **系统**: Debian Linux
 
 ## 快速部署步骤
@@ -12,7 +12,7 @@
 
 ```bash
 ssh root@42.194.226.146
-# 输入密码: Thanks12A#
+# 输入密码: password
 ```
 
 ### 2. 安装Docker环境
