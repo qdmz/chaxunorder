@@ -3,14 +3,14 @@
 # 远程服务器部署脚本
 # 目标服务器: 42.194.226.146
 # 用户: root
-# 密码: Thanks12A#
+# 密码: password
 
 set -e
 
 # 服务器配置
 SERVER_IP="42.194.226.146"
 SERVER_USER="root"
-SERVER_PASS="Thanks12A#"
+SERVER_PASS="password"
 SERVER_PATH="/opt/chaxunorder"
 PROJECT_NAME="chaxunorder"
 
